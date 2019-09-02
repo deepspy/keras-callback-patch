@@ -1,10 +1,10 @@
 __author__ = 'Pavel Yatvetsky'
 
-import keras as keras
+from keras.callbacks import TensorBoard, ModelCheckpoint
 import os
 from struct import pack, unpack
 
-class TensorboardCallback(keras.callbacks.TensorBoard):
+class TensorboardCallback(TensorBoard):
     def __init__(self, TrainStart=-1, **kwargs):
         super(TensorboardCallback, self).__init__(**kwargs)
         self.TrainStart = TrainStart
@@ -42,7 +42,7 @@ class TensorboardCallback(keras.callbacks.TensorBoard):
         self.params_file.write(pack('I', self.current_epoch))
         self.params_file.flush()
 
-class CheckpointCallback(keras.callbacks.ModelCheckpoint):
+class CheckpointCallback(ModelCheckpoint):
     def __init__(self, *args, **kwargs):
         super(CheckpointCallback, self).__init__(*args, **kwargs)
         self.current_epoch = 0
