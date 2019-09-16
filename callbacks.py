@@ -4,9 +4,11 @@ from keras.callbacks import TensorBoard, ModelCheckpoint
 import os
 from struct import pack, unpack
 
+
 class TensorboardCallback(TensorBoard):
     def __init__(self, TrainStart=-1, **kwargs):
         super(TensorboardCallback, self).__init__(**kwargs)
+        assert TrainStart < 0, "TrainStart must be negative!"
         self.TrainStart = TrainStart
 
     def set_model(self, model):
@@ -16,7 +18,6 @@ class TensorboardCallback(TensorBoard):
         if os.path.exists(log_filename):
             self.params_file = open(log_filename, 'r+b')
             self.current_epoch = unpack('I', self.params_file.read())[0] + self.TrainStart + 1
-            self.TrainStart = -1
         else:
             self.params_file = open(log_filename, 'w+b')
             self.current_epoch = 0
@@ -24,7 +25,7 @@ class TensorboardCallback(TensorBoard):
 
         print('Starting from epoch', self.current_epoch + 1)
 
-    def __del__(self):
+    def __del__(self):  # todo: This function crashes.
         self.on_train_end(None)
 
     def on_epoch_end(self, epoch, logs=None):
@@ -42,12 +43,17 @@ class TensorboardCallback(TensorBoard):
         self.params_file.write(pack('I', self.current_epoch))
         self.params_file.flush()
 
+
 class CheckpointCallback(ModelCheckpoint):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, TBCallback=None, *args, **kwargs):
         super(CheckpointCallback, self).__init__(*args, **kwargs)
         self.current_epoch = 0
+        self.TBCallback = TBCallback
 
     def on_epoch_end(self, epoch, logs=None):
-        # print('Saving checkpoint epoch', self.current_epoch)
+        if self.TBCallback:
+            self.current_epoch = self.TBCallback.current_epoch
+        else:
+            self.current_epoch += 1
+        print('Saving checkpoint epoch', self.current_epoch)
         super(CheckpointCallback, self).on_epoch_end(epoch=self.current_epoch, logs=logs)
-        self.current_epoch += 1
