@@ -25,8 +25,9 @@ class TensorboardCallback(TensorBoard):
 
         print('Starting from epoch', self.current_epoch + 1)
 
-    def __del__(self):  # todo: This function crashes.
-        self.on_train_end(None)
+    def __del__(self):
+        if 'params_file' in dir(self):
+            self.on_train_end(None)
 
     def on_epoch_end(self, epoch, logs=None):
         self.current_epoch += 1
